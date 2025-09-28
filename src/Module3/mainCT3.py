@@ -4,21 +4,46 @@
 # Requirement(s): Bubble sort and merge sort algorithms
 
 import os
+import time
+from enum import Enum
 from datetime import datetime
 
+class Gender(Enum):
+    MALE = "Male"
+    FEMALE = "Female"
+    OTHER = "Other"
+
+class SortKey(Enum):
+    NAME = "name"
+    SURNAME = "surname"
+    PATIENT_ID = "patient_id"
+    GENDER = "gender"
+    ADMISSION_DATE = "admission_date"
+
 class Patient:
-    def __init__(self, name: str, admission_date: str):
+    def __init__(self, name: str, surname: str, patient_id: int, gender: Gender, admission_date: str):
         self.name = name
+        self.surname = surname
+        self.patient_id = patient_id
+        self.gender = gender
         self.admission_date = datetime.strptime(admission_date, "%Y-%m-%d")
 
     def __repr__(self):
-        return f"{self.name} ({self.admission_date.date()})"
+        return (
+            f"{self.name} {self.surname} | ID: {self.patient_id} "
+            f"| Gender: {self.gender.value} | Date: {self.admission_date.date()}"
+        )
 
 class SortEngine:
-    def get_admission_date(self, patient: Patient):
-        return patient.admission_date
+    def get_key_func(self, sort_key: SortKey):
+        return {
+            SortKey.NAME: lambda p: p.name,
+            SortKey.SURNAME: lambda p: p.surname,
+            SortKey.PATIENT_ID: lambda p: p.patient_id,
+            SortKey.GENDER: lambda p: p.gender.value,
+            SortKey.ADMISSION_DATE: lambda p: p.admission_date
+        }[sort_key]
 
-    # Bubble Sort implementation
     def bubble_sort(self, records, key_func):
         n = len(records)
         for i in range(n):
@@ -27,7 +52,6 @@ class SortEngine:
                     records[j], records[j + 1] = records[j + 1], records[j]
         return records
 
-    # Merge Sort implementation
     def merge_sort(self, records, key_func):
         if len(records) <= 1:
             return records
@@ -55,7 +79,6 @@ class SortEngine:
         return retval
 
 def clear_screen():
-    # 'nt' means Windows, otherwise assume POSIX (*nix)
     command = 'cls' if os.name == 'nt' else 'clear'
     os.system(command)
 
@@ -65,24 +88,43 @@ def main():
         print('*** Module 3 - Critical Thinking ***\n')
 
         patient_records = [
-            Patient("Angel", "2023-06-15"),
-            Patient("James", "2023-03-22"),
-            Patient("Sarah", "2023-08-01"),
-            Patient("John", "2023-01-10")
+            Patient("Angel", "Hernandez", 101, Gender.MALE, "2025-06-15"),
+            Patient("James", "Smith", 102, Gender.MALE, "2025-03-22"),
+            Patient("Sarah", "Johnson", 103, Gender.FEMALE, "2025-08-01"),
+            Patient("John", "Doe", 104, Gender.MALE, "2025-01-10")
         ]
 
         sort_engine = SortEngine()
-        print("Bubble Sort Result:")
-        sorted_bubble = sort_engine.bubble_sort(patient_records.copy(), sort_engine.get_admission_date)
-        for patient in sorted_bubble:
-            print(patient)
 
-        print("\nMerge Sort Result:")
-        sorted_merge = sort_engine.merge_sort(patient_records.copy(), sort_engine.get_admission_date)
-        for patient in sorted_merge:
-            print(patient)
+        sort_keys = [SortKey.ADMISSION_DATE, SortKey.PATIENT_ID, SortKey.GENDER, SortKey.ADMISSION_DATE, SortKey.NAME,
+                     SortKey.SURNAME]
+
+        print("Sort keys available")
+        print('*' * 19)
+
+        for x,k in enumerate(sort_keys, start=1):
+            print(f"Press {x}: to sort by {k}")
+
+        selected_sort = int(input("\nWhich sort key would you like to use? "))
+        sort_by = sort_keys[selected_sort - 1] if 1 <= selected_sort <= len(sort_keys) else SortKey.PATIENT_ID
+        key_func = sort_engine.get_key_func(sort_by)
+        print(f"\nSorting by: {sort_by.name}\n")
+
+        sort_ops = [("Bubble Sort Result", sort_engine.bubble_sort, "Bubble Sort Time"),
+                    ("Merge Sort Result", sort_engine.merge_sort, "Merge Sort Time")]
+
+        for sort, callback, execution in sort_ops:
+            start = time.perf_counter()
+            sorted_records = callback(patient_records.copy(), key_func)
+            end = time.perf_counter()
+            print(f"\n{sort}:")
+            print('*' * len(sort))
+            for patient in sorted_records:
+                print(patient)
+            print(f"\n{execution}: {end - start:.6f} seconds.\n")
 
     except Exception as e:
         print(e)
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()
