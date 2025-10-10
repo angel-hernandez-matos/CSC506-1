@@ -1,11 +1,10 @@
 # File: mainCT5.py
 # Written by: Angel Hernandez
-# Description: Module 4 - Portfolio Milestone
+# Description: Module 5 - Portfolio Milestone
 # Requirement(s): Hashtable implementation
 
 import os
 import random
-
 
 class HashTable:
     def __init__(self, size=500):
@@ -13,7 +12,9 @@ class HashTable:
         self.table = [[] for _ in range(size)]
 
     def __iter__(self):
-        return iter(self.table)
+        for b in self.table:
+            for key, _ in b:
+                yield key
 
     def _hash(self, key):
         return hash(key) % self.size
@@ -44,20 +45,23 @@ class TestCaseRunner:
         recommended_content = HashTable()
         preferences = [["politics", "music", "movies"], ["sports","stock market", "science"],
                        ["technology", "gaming", "live events"]]
-        available_posts = [["technology", "ai", "r&d"], ["live events", "sports", "baseball"],
+        available_tags = [["technology", "ai", "r&d"], ["live events", "sports", "baseball"],
                            ["stock market", "politics", "corporate"], ["music", "concert", "rock"],
                            ["science", "computers", "cloud"]]
         for _ in range(0,5,1):
             user = f"user{_ + 1}"
-            users.insert(user, preferences[random.randint(0, len(preferences)-1)])
-            recommended_content.insert(f"page{_+1}", available_posts[random.randint(0, len(available_posts)-1)])
-
+            users.insert(user,preferences[random.randint(0, len(preferences)-1)])
+            recommended_content.insert(f"page{_+1}", available_tags[random.randint(0, len(available_tags)-1)])
         recommendation_engine = RecommendationEngine(users, recommended_content)
 
         for user in users:
-            print(f"\nRecommendations for {user}")
-            for c in recommendation_engine.recommend(user):
-                print(c)
+            prefs = users.get(user)
+            print(f"\nUser: {user}")
+            print(f"Preferences: {prefs}")
+            print("Recommendations:")
+            for page in recommendation_engine.recommend(user):
+                page_tags = recommended_content.get(page)
+                print(f"- {page} => Tags: {page_tags}")
 
 class RecommendationEngine:
     def __init__(self, users, recommended_content):
